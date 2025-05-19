@@ -1,4 +1,5 @@
 const Designation = require("../models/Designation.model");
+const slugify = require("slugify");
 
 /* ---------------- GET ------------------ */
 const getDesignationsList = async (req, res) => {
@@ -29,14 +30,14 @@ const getDesignation = async (req, res) => {
 /* ---------------- POST ------------------ */
 const addDesignation = async (req, res) => {
   try {
-    const { title } = req.body;
+    const { name } = req.body;
 
-    const exists = await Designation.findOne({ title });
+    const exists = await Designation.findOne({ name });
     if (exists) {
       return res.status(409).json({ message: "Designation already exists", success: false });
     }
 
-    const newDesignation = await Designation.create({ title });
+    const newDesignation = await Designation.create({ name });
     return res.status(201).json({ success: true, message: "Designation added successfully", data: newDesignation });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
@@ -47,7 +48,11 @@ const addDesignation = async (req, res) => {
 const updateDesignation = async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await Designation.findByIdAndUpdate({ _id: id }, req.body, {
+    const { name } = req.body;
+
+    const slug = slugify(name, { lower: true, strict: true });
+
+    const updated = await Designation.findByIdAndUpdate({ _id: id }, { name, slug }, {
       new: true,
     });
 

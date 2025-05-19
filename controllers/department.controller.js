@@ -1,4 +1,5 @@
 const Department = require("../models/Department.model");
+const slugify = require("slugify");
 
 /* ---------------- GET ------------------ */
 const getDepartmentsList = async (req, res) => {
@@ -66,8 +67,9 @@ const updateDepartment = async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
+    const slug = slugify(name, { lower: true, strict: true });
 
-    const updated = await Department.findByIdAndUpdate({ _id: id }, { name }, {
+    const updated = await Department.findByIdAndUpdate({ _id: id }, { name, slug }, {
       new: true,
     });
 
