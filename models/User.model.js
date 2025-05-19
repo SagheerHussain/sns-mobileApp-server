@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
-      unique: true,
       required: true,
     },
     email: { type: String, required: true },
@@ -27,7 +26,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.index({ role: 1 });
-userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ email: 1, status: 1 });
+userSchema.index({ isActiveEmployee: 1 });
+userSchema.index({ department: 1 });
 
 module.exports = mongoose.model("User", userSchema);
