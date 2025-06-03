@@ -3,7 +3,7 @@ const Investment = require("../models/Investment.model");
 /* ----------------- GET ---------------- */
 const getInvestmentLists = async (req, res) => {
   try {
-    const investments = await Investment.find();
+    const investments = await Investment.find().populate("owners_id").lean();
     if (investments.length === 0) {
       return res
         .status(404)
@@ -41,18 +41,20 @@ const getInvestmentById = async (req, res) => {
 /* ----------------- POST ---------------- */
 const addInvestment = async (req, res) => {
   try {
-    const { organization_name, owners_id, start_date, total_amount, investment_type } = req.body;
+    const { organization_name, owners_id, start_date, total_amount, investment_type, status } = req.body;
+    console.log(req.body)
 
-    if (!organization_name || !owners_id || !start_date || !total_amount || !investment_type) {
-      return res.status(400).json({ message: "All fields are required", success: false });
+    if (!organization_name || !owners_id || !start_date || !total_amount || !investment_type || !status) {
+      return res.status(404).json({ message: "All fields are required", success: false });
     }
 
     const investment = await Investment.create({
       organization_name,
       owners_id,
       start_date,
-      total_amount,
+      total_amount: Number(total_amount),
       investment_type,
+      status,
     });
     return res.status(200).json({
       success: true,
@@ -60,7 +62,12 @@ const addInvestment = async (req, res) => {
       message: "Investment added successfully",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -74,6 +81,7 @@ const updateInvestment = async (req, res) => {
       start_date,
       total_amount,
       investment_type,
+      status,
     } = req.body;
     const investment = await Investment.findByIdAndUpdate(
       { _id: id },
@@ -83,6 +91,7 @@ const updateInvestment = async (req, res) => {
         start_date,
         total_amount,
         investment_type,
+        status,
       },
       { new: true }
     );

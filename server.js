@@ -2,6 +2,8 @@ const express = require("express");
 require("dotenv").config();
 const dbConnection = require("./config/config");
 const cron = require("node-cron");
+const mongoose = require("mongoose");
+const Designation = require("./models/Designation.model");
 
 const app = express();
 

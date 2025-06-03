@@ -6,7 +6,7 @@ const { getClientsList, getClient, createClient, updateClient, deleteClient } = 
 
 // GET
 router.get("/lists", getClientsList);
-router.get("/lists/:email", getClient);
+router.get("/lists/:id", getClient);
 
 // POST
 router.post("/", createClient);

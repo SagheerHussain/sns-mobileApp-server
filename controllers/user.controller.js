@@ -22,6 +22,27 @@ const getUsersList = async (req, res) => {
   }
 };
 
+const getSpecifiedUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: "682ae2e98e8f7a2c9f75c3d8" })
+      .populate("role")
+      .select("fullname")
+      .lean();
+    if (users.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "There is no users right now.", success: true });
+    }
+    return res.status(200).json({
+      message: "Users retrieved successfully",
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, success: false });
+  }
+};
+
 const getUserProfile = async (req, res) => {
   try {
     const { email } = req.body;
@@ -118,6 +139,7 @@ const deleteProfile = async (req, res) => {
 module.exports = {
   getUserProfile,
   getUsersList,
+  getSpecifiedUsers,
   updateProfile,
   deleteProfile
 };

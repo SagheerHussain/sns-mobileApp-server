@@ -1,4 +1,5 @@
 const PaymentMethod = require("../models/PaymentMethod.model");
+const slugify = require("slugify");
 
 /* --------------------- GET -------------------- */
 const getPaymentMethods = async (req, res) => {
@@ -41,15 +42,35 @@ const getPaymentMethodById = async (req, res) => {
 /* --------------------- POST -------------------- */
 const addPaymentMethod = async (req, res) => {
   try {
-    const { method, slug } = req.body;
-    const paymentMethod = await PaymentMethod.create({ method, slug });
+    const { method } = req.body;
+    console.log(req.body)
+
+    if (!method) {
+      return res
+        .status(400)
+        .json({ message: "Payment Method is required", success: false });
+    }
+
+    const isExist = await PaymentMethod.findOne({ method }).lean();
+    if (isExist) {
+      return res
+        .status(409)
+        .json({ message: "Payment Method already exists", success: false });
+    }
+
+    const paymentMethod = await PaymentMethod.create({ method });
     return res.status(201).json({
       success: true,
       data: paymentMethod,
       message: "Payment Method created successfully",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -57,7 +78,10 @@ const addPaymentMethod = async (req, res) => {
 const updatePaymentMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method, slug } = req.body;
+    const { method } = req.body;
+
+    const slug = slugify(method, { lower: true, strict: true });
+
     const paymentMethod = await PaymentMethod.findByIdAndUpdate(
       { _id: id },
       { method, slug },

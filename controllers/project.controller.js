@@ -5,7 +5,7 @@ const Task = require("../models/Task.model");
 /* --------------- GET --------------- */
 const getProjectsLists = async (req, res) => {
   try {
-    const projects = await Project.find()
+    const projects = await Project.find({ progress_percentage: { $lt: 100 } })
       .select(
         "title overview total_cost deadline lead_date assign_users documents priority stage progress_percentage tags created_by"
       )
@@ -26,7 +26,12 @@ const getProjectsLists = async (req, res) => {
       data: projects,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -35,10 +40,11 @@ const getProjectById = async (req, res) => {
     const { id } = req.params;
     const project = await Project.findById({ _id: id })
       .select(
-        "title overview total_cost deadline lead_date assign_users documents priority stage progress_percentage tags created_by"
+        "title overview total_cost client deadline lead_date assign_users documents priority stage progress_percentage tags created_by"
       )
       .populate("assign_users")
       .populate("documents")
+      .populate("client")
       .populate("created_by")
       .lean();
 
@@ -63,7 +69,15 @@ const getProjectById = async (req, res) => {
 
 const filteredProjects = async (req, res) => {
   try {
-    const { search, priority, stage, status, users, client, page = 1 } = req.query;
+    const {
+      search,
+      priority,
+      stage,
+      status,
+      users,
+      client,
+      page = 1,
+    } = req.query;
 
     let query = {};
 
@@ -95,7 +109,6 @@ const filteredProjects = async (req, res) => {
         { overview: { $regex: search, $options: "i" } },
       ];
     }
-
 
     const limit = 10;
     const skip = (parseInt(page) - 1) * limit;
@@ -131,6 +144,58 @@ const filteredProjects = async (req, res) => {
   }
 };
 
+const getProjectSpecificInfo = async (req, res) => {
+  try {
+    const project = await Project.find().select("title").lean();
+
+    if (project.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "There is no projects right now.", success: true });
+    }
+
+    return res.status(200).json({
+      message: "Projects fetched successfully",
+      success: true,
+      data: project,
+    });
+  } catch (error) {
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+const getCompletedProjects = async (req, res) => {
+  try {
+    const projects = await Project.find({ status: "completed" })
+      .select(
+        "title overview total_cost deadline lead_date assign_users documents priority stage progress_percentage tags created_by"
+      )
+      .populate("assign_users")
+      .populate("documents")
+      .populate("created_by")
+      .lean();
+
+    if (projects.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "There is no projects right now.", success: true });
+    }
+
+    return res.status(200).json({
+      message: "Projects fetched successfully",
+      success: true,
+      data: projects,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Server Error", success: false });
+  }
+};
+
 /* --------------- POST --------------- */
 const createProject = async (req, res) => {
   try {
@@ -141,7 +206,6 @@ const createProject = async (req, res) => {
       deadline,
       lead_date,
       assign_users,
-      documents,
       client,
       priority,
       stage,
@@ -173,8 +237,8 @@ const createProject = async (req, res) => {
       deadline,
       lead_date,
       assign_users,
-      documents,
       client,
+      status: "hold_on",
       priority,
       stage,
       tags,
@@ -187,7 +251,12 @@ const createProject = async (req, res) => {
       data: project,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -195,33 +264,30 @@ const createProject = async (req, res) => {
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
+    let {
       title,
       overview,
       total_cost,
       deadline,
       lead_date,
       assign_users,
-      documents,
+      // documents,
+      progress_percentage,
       client,
       priority,
       stage,
       status,
       tags,
-      created_by,
+      edit_project_user,
     } = req.body;
 
-    const taskAssignThisProject = await Task.find({ project_id: id }).lean();
-    // Calculate progress_percentage
-    let progress_percentage = 0;
-    const totalTasks = taskAssignThisProject.length;
+    console.log(req.body);
 
-    if (totalTasks > 0) {
-      const completedTasks = taskAssignThisProject.filter(
-        (task) => task.status === "completed"
-      ).length;
+    let completedAt;
 
-      progress_percentage = Math.round((completedTasks / totalTasks) * 100);
+    if (status === "completed") {
+      progress_percentage = 100;
+      completedAt = new Date();
     }
 
     const updated = await Project.findByIdAndUpdate(
@@ -229,18 +295,19 @@ const updateProject = async (req, res) => {
       {
         title,
         overview,
-        total_cost,
+        total_cost: Number(total_cost),
         deadline,
         lead_date,
         assign_users,
-        documents,
+        // documents,
         client,
         priority,
         stage,
         status,
-        progress_percentage,
+        progress_percentage: Number(progress_percentage),
         tags,
-        created_by,
+        edit_project_user,
+        completedAt,
       },
       {
         new: true,
@@ -259,7 +326,12 @@ const updateProject = async (req, res) => {
       data: updated,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -287,7 +359,9 @@ const deleteProject = async (req, res) => {
 module.exports = {
   getProjectsLists,
   getProjectById,
+  getProjectSpecificInfo,
   filteredProjects,
+  getCompletedProjects,
   createProject,
   updateProject,
   deleteProject,

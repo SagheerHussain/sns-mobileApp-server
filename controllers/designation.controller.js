@@ -6,9 +6,17 @@ const getDesignationsList = async (req, res) => {
   try {
     const designations = await Designation.find().lean();
     if (!designations) {
-      return res.status(404).json({ message: "Designations not found", success: false });
+      return res
+        .status(404)
+        .json({ message: "Designations not found", success: false });
     }
-    return res.status(200).json({ success: true, message: "Designations fetched successfully", data: designations });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Designations fetched successfully",
+        data: designations,
+      });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
@@ -19,9 +27,17 @@ const getDesignation = async (req, res) => {
     const { id } = req.params;
     const designation = await Designation.findById({ _id: id }).lean();
     if (!designation) {
-      return res.status(404).json({ message: "Designation not found", success: false });
+      return res
+        .status(404)
+        .json({ message: "Designation not found", success: false });
     }
-    return res.status(200).json({ success: true, data: designation, message: "Designation retrieved successfully" });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: designation,
+        message: "Designation retrieved successfully",
+      });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
@@ -34,13 +50,28 @@ const addDesignation = async (req, res) => {
 
     const exists = await Designation.findOne({ name });
     if (exists) {
-      return res.status(409).json({ message: "Designation already exists", success: false });
+      return res
+        .status(409)
+        .json({ message: "Designation already exists", success: false });
     }
 
+    console.log(name, exists);
+
     const newDesignation = await Designation.create({ name });
-    return res.status(201).json({ success: true, message: "Designation added successfully", data: newDesignation });
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Designation added successfully",
+        data: newDesignation,
+      });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -52,15 +83,27 @@ const updateDesignation = async (req, res) => {
 
     const slug = slugify(name, { lower: true, strict: true });
 
-    const updated = await Designation.findByIdAndUpdate({ _id: id }, { name, slug }, {
-      new: true,
-    });
+    const updated = await Designation.findByIdAndUpdate(
+      { _id: id },
+      { name, slug },
+      {
+        new: true,
+      }
+    );
 
     if (!updated) {
-      return res.status(404).json({ message: "Designation not found", success: false });
+      return res
+        .status(404)
+        .json({ message: "Designation not found", success: false });
     }
 
-    return res.status(200).json({ success: true, data: updated, message: "Designation updated successfully" });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: updated,
+        message: "Designation updated successfully",
+      });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
@@ -73,10 +116,14 @@ const deleteDesignation = async (req, res) => {
     const deleted = await Designation.findByIdAndDelete(id);
 
     if (!deleted) {
-      return res.status(404).json({ message: "Designation not found", success: false });
+      return res
+        .status(404)
+        .json({ message: "Designation not found", success: false });
     }
 
-    return res.status(200).json({ success: true, message: "Designation deleted" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Designation deleted" });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }

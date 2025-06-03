@@ -30,6 +30,8 @@ const projectSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    completedAt: { type: Date },
+    edit_project_user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

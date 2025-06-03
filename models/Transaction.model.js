@@ -17,7 +17,7 @@ const transactionSchema = new mongoose.Schema(
     month: { type: String, required: true },
     year: { type: String, required: true },
     reciept_url: { type: String },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    sender: { type: String },
   },
   { timestamps: true }
 );

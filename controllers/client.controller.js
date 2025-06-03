@@ -4,7 +4,6 @@ const Client = require("../models/Client.model");
 const getClientsList = async (req, res) => {
   try {
     const clients = await Client.find({})
-      .populate("user")
       .select("name email organization phone_number type isActive")
       .lean();
 
@@ -20,8 +19,10 @@ const getClientsList = async (req, res) => {
       data: clients,
     });
   } catch (error) {
+    console.error("Error saving client:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: "Error saving client",
+      error: error.message,
       success: false,
     });
   }
@@ -29,10 +30,9 @@ const getClientsList = async (req, res) => {
 
 const getClient = async (req, res) => {
   try {
-    const { email } = req.params;
+    const { id } = req.params;
 
-    const client = await Client.findOne({ email })
-      .populate("user")
+    const client = await Client.findOne({ _id: id })
       .select("name email organization phone_number type isActive")
       .lean();
 
@@ -48,8 +48,10 @@ const getClient = async (req, res) => {
       data: client,
     });
   } catch (error) {
+    console.error("Error saving client:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: "Error saving client",
+      error: error.message,
       success: false,
     });
   }
@@ -74,7 +76,7 @@ const createClient = async (req, res) => {
         .json({ message: "Client already exists", success: false });
     }
 
-    const newClient = await Client.create({
+    const newClient = new Client({
       name,
       email,
       phone_number,
@@ -82,14 +84,18 @@ const createClient = async (req, res) => {
       type,
     });
 
+    await newClient.save();
+
     return res.status(200).json({
       message: "Client created successfully",
       success: true,
       data: newClient,
     });
   } catch (error) {
+    console.error("Error saving client:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: "Error saving client",
+      error: error.message,
       success: false,
     });
   }
@@ -98,9 +104,11 @@ const createClient = async (req, res) => {
 /* ---------------- PUT ------------------ */
 const updateClient = async (req, res) => {
   try {
-    const { id } = req.params();
+    const { id } = req.params;
     const { name, email, phone_number, organization, type, isActive } =
       req.body;
+
+    
 
     const newClient = await Client.findByIdAndUpdate(
       { _id: id },
@@ -121,8 +129,10 @@ const updateClient = async (req, res) => {
       data: newClient,
     });
   } catch (error) {
+    console.error("Error saving client:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: "Error saving client",
+      error: error.message,
       success: false,
     });
   }

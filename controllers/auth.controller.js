@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       phone_number,
-      role: "680a0345566724378be91389",
+      role: "682ae2e98e8f7a2c9f75c3d8",
       department,
       designation,
       profile_picture: imgPath ? imgPath.secure_url : "",
@@ -103,13 +103,15 @@ const loginUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    const populatedUser = await User.findById(user._id).populate("role").lean();
+
     const sanitizedUser = {
       _id: user._id,
       fullname: user.fullname,
       username: user.username,
       email: user.email,
       profile_picture: user.profile_picture,
-      role: user.role,
+      role: populatedUser.role,
       designation: user.designation,
       department: user.department,
       phone_number: user.phone_number,

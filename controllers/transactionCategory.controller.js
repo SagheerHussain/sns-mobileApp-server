@@ -1,4 +1,5 @@
 const TransactionCategory = require("../models/TransactionCategory.model");
+const slugify = require("slugify");
 
 /* ---------------------- GET --------------------- */
 const getTransactionCategoriesLists = async (req, res) => {
@@ -48,14 +49,8 @@ const addTransactionCategory = async (req, res) => {
         .json({ message: "Name is required", success: false });
     }
 
-    const slug = name
-      .split(" ")
-      .map((word) => word.toLowerCase())
-      .join("-");
-
     const transactionCategory = await TransactionCategory.create({
       name,
-      slug,
     });
     return res.status(201).json({
       success: true,
@@ -78,10 +73,7 @@ const updateTransactionCategory = async (req, res) => {
         .json({ message: "Name is required", success: false });
     }
 
-    const slug = name
-      .split(" ")
-      .map((word) => word.toLowerCase())
-      .join("-");
+    const slug = slugify(name, { lower: true, strict: true });
 
     const transactionCategory = await TransactionCategory.findByIdAndUpdate(
       { _id: id },
@@ -99,7 +91,12 @@ const updateTransactionCategory = async (req, res) => {
       message: "Transaction Category updated successfully",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 

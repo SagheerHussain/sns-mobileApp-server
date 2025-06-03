@@ -3,7 +3,7 @@ const Transaction = require("../models/Transaction.model");
 /* --------------------- GET --------------------- */
 const getTransactionsLists = async (req, res) => {
   try {
-    const transactions = await Transaction.find().lean();
+    const transactions = await Transaction.find().populate("category payment_method").lean();
     if (transactions.length === 0) {
       return res
         .status(404)
@@ -12,17 +12,22 @@ const getTransactionsLists = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: transactions,
-      message: "No Transactions found",
+      message: "Transactions lists found",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
 const getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const transaction = await Transaction.findById({ _id: id }).lean();
+    const transaction = await Transaction.findById({ _id: id }).populate("category payment_method").lean();
     if (!transaction) {
       return res
         .status(404)
@@ -60,7 +65,7 @@ const filteredTransactions = async (req, res) => {
       query.category = category;
     }
 
-    const transactions = await Transaction.find(query).lean();
+    const transactions = await Transaction.find(query).populate("sender_id category payment_method").lean();
     if (transactions.length === 0) {
       return res
         .status(404)
@@ -86,8 +91,10 @@ const addTransaction = async (req, res) => {
       category,
       payment_method,
       paid_date,
+      month,
+      year,
       reciept_url,
-      user,
+      sender,
     } = req.body;
 
     if (
@@ -97,31 +104,14 @@ const addTransaction = async (req, res) => {
       !category ||
       !payment_method ||
       !paid_date ||
-      !reciept_url ||
-      !user
+      !month ||
+      !year ||
+      !sender
     ) {
       return res
         .status(400)
         .json({ message: "All fields are required", success: false });
     }
-
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    const monthIndex = parseInt(paid_date.split("-")[1], 10) - 1;
-    const year = parseInt(paid_date.split("-")[0]);
-    const month = months[monthIndex];
 
     const transaction = await Transaction.create({
       title,
@@ -132,8 +122,8 @@ const addTransaction = async (req, res) => {
       paid_date,
       month,
       year,
-      reciept_url,
-      user,
+      reciept_url: reciept_url ? reciept_url : "",
+      sender,
     });
 
     return res.status(201).json({
@@ -142,7 +132,12 @@ const addTransaction = async (req, res) => {
       message: "Transaction created successfully",
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", success: false });
+    console.error("Error saving client:", error);
+    return res.status(500).json({
+      message: "Error saving client",
+      error: error.message,
+      success: false,
+    });
   }
 };
 

@@ -18,9 +18,9 @@ router.get("/get/:id", getTransactionCategoryById);
 router.post("/", addTransactionCategory);
 
 // PUT
-router.put("/:id", updateTransactionCategory);
+router.put("/update/:id", updateTransactionCategory);
 
 // DELETE
-router.delete("/:id", deleteTransactionCategory);
+router.delete("/delete/:id", deleteTransactionCategory);
 
 module.exports = router;

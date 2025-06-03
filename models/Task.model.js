@@ -4,7 +4,7 @@ const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     details: { type: String, required: true },
-    project_id: {
+    project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       required: true,
@@ -14,7 +14,7 @@ const taskSchema = new mongoose.Schema(
     ],
     stage: {
       type: String,
-      enum: ["development", "designing", "testing", "live"],
+      enum: ["development", "designing", "testing", "completed"],
       required: true,
     },
     status: {
@@ -25,7 +25,7 @@ const taskSchema = new mongoose.Schema(
     priority: { type: String, enum: ["high", "low", "urgent"], required: true },
     due_date: { type: Date, required: true },
     completedAt: { type: Date },
-    document: [{ type: mongoose.Schema.Types.ObjectId, ref: "Document" }],
+    // document: [{ type: mongoose.Schema.Types.ObjectId, ref: "Document" }],
     progress_percentage: { type: Number, default: 0 },
     tags: [String],
     edit_task_user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
